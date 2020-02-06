@@ -10,18 +10,12 @@ INC := -I $(INCD)
 
 EXEC := filesec
 
-CFLAGS := -Wall -Werror
-DFLAGS := -g -DDEBUG
+CFLAGS := -g -O2 -Wall -Werror
 STD := -std=gnu11
-
-LIBS := -lreadline -pthread -ljansson
 
 CFLAGS += $(STD)
 
 .PHONY: clean all
-
-debug: CFLAGS += -g -DDEBUG
-debug: all
 
 all: setup $(EXEC)
 
