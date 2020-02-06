@@ -18,8 +18,9 @@ static int e_flag, d_flag, p_flag = 0;
 
 int main(int argc, char *argv[])
 {
+    int retval = EXIT_SUCCESS;
     int opt;
-    // char *db_value, *p_value;
+    // char *p_value;
     while ((opt = getopt(argc, argv, options)) != -1)
     {
         switch (opt)
@@ -31,10 +32,11 @@ int main(int argc, char *argv[])
             d_flag++;
             break;
         case VERSION:
-            Version(argv[0]);
+            retval = Version(argv[0]);
+            goto exit;
             break;
         case HELP:
-            usage(argv[0]);
+            goto fail;
             break;
         case DBUG:
             DBGVAL = atoi(optarg);
@@ -44,20 +46,44 @@ int main(int argc, char *argv[])
             // p_value = optarg;
             break;
         default:
-            usage(argv[0]);
+            goto fail;
             break;
         }
     }
-    //NOT XOR
-    Version(argv[0]);
+    //DEBUG Boiler plate enter
+    if ((retval = enter_main(USER_CALL, __func__, argc, argv)) < 0)
+        return retval;
+    //DEBUG Boiler plate enter
     if (argc <= 1)
-        usage(argv[0]);
-    printf("Argc = %d\nOpt = %d\n", argc, opt);
-    exit(EXIT_SUCCESS);
+        goto fail;
+    if (!(e_flag ^ d_flag))
+        goto fail;
+    goto exit;
+fail:
+    retval = Usage(argv[0]);
+exit:
+    //DEBUG Boiler plate leave
+    leave(USER_CALL, __func__, retval);
+    //DEBUG Boiler plate leave
+    return retval;
 }
 
-void usage(char *name)
+int Usage(char *name)
 {
-    fprintf(stderr, "Usage: %s [-devh] [-D DBGVAL] [-p PASSFILE] infile outfile\n", name);
-    exit(EXIT_FAILURE);
+    int retval, result;
+    if ((retval = enter(USER_CALL, __func__, 1, name)) < 0)
+        return retval;
+    result = usage(name);
+    if ((retval = leave(USER_CALL, __func__, result)) < 0)
+        return retval;
+    return EXIT_FAILURE;
+}
+
+int usage(char *name)
+{
+    int retval;
+    if ((retval = fprintf(stderr, "Usage: %s [-devh] [-D DBGVAL] [-p PASSFILE] infile outfile\n", name)) < 0)
+        return retval;
+    else
+        return EXIT_SUCCESS;
 }

@@ -4,7 +4,7 @@
 #define TRUE 1
 #define FALSE 0
 
-void _usage(char *name);
-void usage(char *name);
+int Usage(char *name);
+int usage(char *name);
 
 #endif

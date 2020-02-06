@@ -7,16 +7,20 @@
 
 int Version(char *name)
 {
-    int retval;
-    if ((retval = enter(USER_CALL, __func__, name)) < 0)
+    int retval, result;
+    if ((retval = enter(USER_CALL, __func__, 1, name)) < 0)
         return retval;
-    retval = version(name);
-    if ((retval = leave(USER_CALL, __func__, retval)) < 0)
+    result = version(name);
+    if ((retval = leave(USER_CALL, __func__, result)) < 0)
         return retval;
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int version(char *name)
 {
-    return fprintf(stdout, "%s version %s\n", name, VERSION_NUMBER);
+    int retval;
+    if ((retval = fprintf(stdout, "%s version %s\n", name, VERSION_NUMBER)) < 0)
+        return retval;
+    else
+        return EXIT_SUCCESS;
 }

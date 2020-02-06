@@ -11,9 +11,11 @@
 extern int DBGVAL;
 
 /* Function that, on enter, prints function name and args based on the DBGVAL*/
-int enter(int enter_policy, const char *function_name, ...);
+int enter(int enter_policy, const char *function_name, int num_args, ...);
 
 /* Function that, on leave, prints function name and retval based on the DBGVAL*/
 int leave(int leave_policy, const char *function_name, int retval);
 
+/* Function that, on entering main(), prints function name and args based on the DBGVAL*/
+int enter_main(int enter_policy, const char *function_name, int argc, char **argv);
 #endif
