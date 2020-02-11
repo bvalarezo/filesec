@@ -7,12 +7,10 @@
 
 int Version(char *name)
 {
-    int retval, result;
-    if ((retval = enter(USER_CALL, __func__, 1, name)) < 0)
-        return retval;
+    int result;
+    enter(USER_CALL, "%s", name);
     result = version(name);
-    if ((retval = leave(USER_CALL, __func__, result)) < 0)
-        return retval;
+    leave(USER_CALL, "%d", result);
     return EXIT_SUCCESS;
 }
 
