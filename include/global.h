@@ -11,7 +11,6 @@
 #define DBUG 'D'
 #define PASSFILE 'p'
 
-int Usage(char *name);
 int usage(char *name);
 
 #endif

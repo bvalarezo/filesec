@@ -3,7 +3,6 @@
 
 #define VERSION_NUMBER "1_0"
 
-int Version(char *name);
 int version(char *name);
 
 #endif
