@@ -1,6 +1,9 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #define TRUE 1
 #define FALSE 0
 

@@ -2,6 +2,9 @@
 #define DEBUG_H
 
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
 /* Predefined values dictating the debug options */
 #define USER_CALL 0x01
 #define LIB_CALL 0x02

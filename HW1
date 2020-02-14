@@ -1,6 +1,6 @@
 		CSE-376 (Spring 2020) Homework Assignment #1
-			    Version 2 (2/3/2020)
-		  Due Tuesday, February 27, 2020, 11:59pm
+			   Version 3 (2/10/2020)
+		  Due Thursday, February 27, 2020, 11:59pm
 	       (This assignment is worth 10% of your grade.)
 
 * PURPOSE:
@@ -86,6 +86,9 @@ Note that you can combine these bits to select subsets of debug info to be
 printed.  For example, the logical OR of 0x01 (1 decimal), 0x10 (16d), and
 0x20 (32d) is 0x31 (1+16+32=49d).  So if DBGVAL is 49d, it means to enable
 the combined functionality of 0x01+0x10+0x20.
+
+DBGVAL can be specified as decimal, octal, or hex.  If you process it with
+scanf("%i", &val), then it'll handle any number representation.
 
 All options should be processed using getopt(3).
 
@@ -346,3 +349,4 @@ SOLUTIONS, NOTES, ETC.
 
 v1: initial draft.
 v2: reviewed by TA.
+v3: clarify DBGVAL numeric representation

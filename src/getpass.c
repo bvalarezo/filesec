@@ -1,11 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <termios.h>
+
+#include <sys/types.h>
 #include "global.h"
 #include "debug.h"
 #include "getpass.h"
+#include "io.h"
 
 int getpass_stdin(char **lineptr)
 {
@@ -92,12 +90,76 @@ int getpass_file(char **lineptr, char *infile)
 {
     enter(USER_CALL, __func__, "%p, %s", lineptr, infile);
     int retval = EXIT_SUCCESS;
-    //read password until you see EOF or \n
-    //open file read only
-    //read(2) NO fgets
-    //read password
+    int fd;
+    struct stat file_stat;
+    size_t buff_size;
+    char *buffer;
+    /* Get the page size with sysconf*/
+    enter(LIB_CALL, "sysconf", "%s", "_SC_PAGESIZE");
+    if ((buff_size = sysconf(_SC_PAGESIZE)) < 0)
+    {
+        perror(KRED "Failed to get system's page size\n" KNRM);
+        leave(LIB_CALL, "sysconf", "%s", strerror(errno));
+        retval = EXIT_FAILURE;
+        goto exit;
+    }
+    leave(LIB_CALL, "sysconf", "%ld", buff_size);
+    /* Set the buff size to either the file size or PAGESIZE*/
+    enter(SYS_CALL, "open", "%s, %s", infile, "O_RDONLY");
+    if ((fd = open(infile, O_RDONLY)) < 0)
+    {
+        perror(KRED "Failed to open file\n" KNRM);
+        leave(SYS_CALL, "open", "%s", strerror(errno));
+        retval = EXIT_FAILURE;
+        goto exit;
+    }
+    leave(SYS_CALL, "open", "%d", fd);
+    enter(SYS_CALL, "fstat", "%d, %p", fd, &file_stat);
+    if (fstat(fd, &file_stat) < 0)
+    {
+        perror(KRED "Failed to get file status\n" KNRM);
+        leave(SYS_CALL, "fstat", "%s", strerror(errno));
+        /*buff_size is PageSize*/
+    }
+    else
+    {
+        leave(SYS_CALL, "fstat", "%d", EXIT_SUCCESS);
+        /*Decide between PageSize or FileSize*/
+        buff_size = (file_stat.st_size < buff_size ? (file_stat.st_size) : buff_size);
+    }
+    //we have the buff_size
+    enter(LIB_CALL, "malloc", "%ld", buff_size);
+    if ((buffer = malloc(buff_size)) == NULL)
+    {
+        perror(KRED "Failed to malloc bytes\n" KNRM);
+        leave(LIB_CALL, "malloc", "%s", strerror(errno));
+        retval = EXIT_FAILURE;
+        goto file_close;
+    }
+    leave(LIB_CALL, "malloc", "%p", buffer);
+    if (full_read(fd, buffer, buff_size) < 0)
+    {
+        perror(KRED "Failed to get fully read bytes from file\n" KNRM);
+        retval = EXIT_FAILURE;
+        goto file_close;
+    }
+    char *t;
+    t = memchr(buffer, '\n', buff_size);
+    printf("%s\n", t);
+    //read lineptr until you see \n or EOF
     //remove \n
     //*lineptr should have password
+file_close:
+    enter(SYS_CALL, "close", "%d", fd);
+    if (close(fd) < 0)
+    {
+        perror(KRED "Failed to close file\n" KNRM);
+        leave(SYS_CALL, "close", "%s", strerror(errno));
+        retval = EXIT_FAILURE;
+        goto exit;
+    }
+    leave(SYS_CALL, "close", "%d", EXIT_SUCCESS);
+exit:
     leave(USER_CALL, __func__, "%d", retval);
     return retval;
 }

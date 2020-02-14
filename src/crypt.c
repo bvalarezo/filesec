@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "global.h"
 #include "debug.h"
 #include "getpass.h"
@@ -21,8 +19,12 @@ int crypter(const char *src, char *dst, char mode, char *passfile)
     }
     else
     {
-        getpass_file(&password, passfile);
-        //open passfile and read it onto buffer
+        if (getpass_file(&password, passfile) != EXIT_SUCCESS)
+        {
+            perror(KRED "Failed to get password from file\n" KNRM);
+            retval = EXIT_FAILURE;
+            goto exit;
+        }
     }
     printf("%p\n", password);
     printf("%s\n", password);
