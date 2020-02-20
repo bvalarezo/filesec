@@ -10,4 +10,6 @@
 int getpass_stdin(char **lineptr);
 int getpass_file(char **lineptr, char *infile);
 
+ssize_t mygetline(char **lineptr, size_t n, int fd);
+
 #endif

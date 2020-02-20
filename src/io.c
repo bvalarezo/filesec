@@ -30,7 +30,22 @@ int full_write(int fd, const void *buf, size_t count)
 {
     enter(USER_CALL, __func__, "%d, %p, %ld", fd, buf, count);
     int retval = EXIT_SUCCESS;
-    //full write
+    size_t bytes_to_write = count;
+    int bytes_written = 0;
+    while (bytes_to_write > 0)
+    {
+        enter(SYS_CALL, "write", "%d, %p, %ld", fd, buf, bytes_to_write);
+        if ((bytes_written = write(fd, buf, bytes_to_write)) < 0)
+        {
+            perror(KRED "Error when writing file\n" KNRM);
+            leave(SYS_CALL, "read", "%s", strerror(errno));
+            retval = EXIT_FAILURE;
+            goto exit;
+        }
+        leave(SYS_CALL, "write", "%d", bytes_written);
+        bytes_to_write -= bytes_written;
+    }
+exit:
     leave(USER_CALL, __func__, "%d", retval);
     return retval;
 }

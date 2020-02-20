@@ -17,6 +17,11 @@
 #define KRED "\033[1;31m"
 #define KGRN "\033[1;32m"
 #define KYLW "\033[1;33m"
+#define KBLU "\033[1;34m"
+#define KMAG "\033[1;35m"
+#define KCYN "\033[1;36m"
+#define KWHT "\033[1;37m"
+#define KBWN "\033[0;33m"
 
 extern int DBGVAL;
 
@@ -24,7 +29,7 @@ extern int DBGVAL;
 #define enter(enter_policy, func_name, fmt, ...)            \
     if (enter_policy & DBGVAL)                              \
     {                                                       \
-        fprintf(stderr, KYLW "Entering... %s(", func_name); \
+        fprintf(stderr, KBWN "Entering... %s(", func_name); \
         if (ARG_CALL & DBGVAL)                              \
         {                                                   \
             fprintf(stderr, fmt, __VA_ARGS__);              \
@@ -36,7 +41,7 @@ extern int DBGVAL;
 #define leave(leave_policy, func_name, fmt, retval)                  \
     if (leave_policy & DBGVAL)                                       \
     {                                                                \
-        fprintf(stderr, KYLW "Leaving... %s", func_name);            \
+        fprintf(stderr, KBWN "Leaving... %s", func_name);            \
         if (RETURN_CALL & DBGVAL)                                    \
         {                                                            \
             fprintf(stderr, " with return value '" fmt "'", retval); \
@@ -49,7 +54,7 @@ extern int DBGVAL;
 #define enter_main(enter_policy, argc, argv)        \
     if (enter_policy & DBGVAL)                      \
     {                                               \
-        fprintf(stderr, KYLW "Entering... main(");  \
+        fprintf(stderr, KBWN "Entering... main(");  \
         if (ARG_CALL & DBGVAL)                      \
         {                                           \
             fprintf(stderr, "%d, [", argc);         \

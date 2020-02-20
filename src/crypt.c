@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "getpass.h"
 #include "crypt.h"
+#include "io.h"
 
 int crypter(const char *src, char *dst, char mode, char *passfile)
 {
@@ -10,6 +11,7 @@ int crypter(const char *src, char *dst, char mode, char *passfile)
     char *password;
     if (passfile == NULL)
     {
+
         if (getpass_stdin(&password) != EXIT_SUCCESS)
         {
             perror(KRED "Failed to get password from terminal\n" KNRM);

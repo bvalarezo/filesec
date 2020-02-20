@@ -53,18 +53,17 @@ int main(int argc, char *argv[])
     if (v_flag)
     {
         retval = version(argv[0]);
-        goto exit;
     }
     if (!(e_flag ^ d_flag))
     {
-        perror(KRED "Please specify either -e or -d\n" KNRM);
+        fprintf(stderr, KRED "Please specify either -e or -d\n" KNRM);
         goto fail;
     }
     infile = argv[optind];
     outfile = argv[++optind];
     if (argv[++optind])
     {
-        perror(KRED "Too many arguments!\nPlease specify only a singular infile and singular outfile\n" KNRM);
+        fprintf(stderr, KRED "Too many arguments!\nPlease specify only a singular infile and singular outfile\n" KNRM);
         goto fail;
     }
     if (e_flag)
