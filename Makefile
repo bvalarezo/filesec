@@ -11,6 +11,7 @@ INC := -I $(INCD)
 EXEC := filesec
 
 CFLAGS := -g -O2 -Wall -Werror
+LDFLAGS := -lssl -lcrypto
 STD := -std=gnu11
 
 CFLAGS += $(STD)
@@ -23,7 +24,7 @@ setup:
 	mkdir -p build
 
 $(EXEC): $(ALL_OBJF)
-	$(CC) $^ -o $@
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 $(BLDD)/%.o: $(SRCD)/%.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<

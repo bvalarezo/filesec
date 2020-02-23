@@ -1,0 +1,8 @@
+Wrap EVP functions with debug[DONE]
+replace fstat with stat [DONE]
+handle failure cases
+full read EOF case
+encryption
+decryption
+write to /tmp  (file.part)
+-handle failure

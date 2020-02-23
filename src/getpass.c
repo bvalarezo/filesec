@@ -3,6 +3,8 @@
 #include "getpass.h"
 #include "io.h"
 
+/*https://www.gnu.org/software/libc/manual/html_node/getpass.html*/
+
 int getpass_stdin(char **lineptr)
 {
     enter(USER_CALL, __func__, "%p", lineptr);
@@ -44,19 +46,19 @@ int getpass_stdin(char **lineptr)
     leave(LIB_CALL, "tcsetattr", "%d", EXIT_SUCCESS);
     /* Read the passphrase */
     //FPRINTF DOESNT WORK BECAUSE 02, use full write
-    if (full_write(fileno(stdout), "Enter Password:\n", 16) != EXIT_SUCCESS)
+    if (full_write(fileno(stdout), "Enter Password:", 15) < 0)
     {
         perror(KRED "Failed to write message\n" KNRM);
         retval = EXIT_FAILURE;
-        goto exit;
+        goto restore;
     }
-    if ((nread = mygetline(lineptr, buff_size, fileno(stdin))) < 0) //WARNING MIGHT BE ILLEGAL /////////////////////////////////////////////////////
+    if ((nread = mygetline(lineptr, buff_size, fileno(stdin))) < 0)
     {
-        perror(KRED "\nFailed to get line from terminal\n" KNRM);
-        leave(LIB_CALL, "getline", "%s", strerror(errno));
+        fprintf(stderr, KRED "\nFailed to get line from terminal\n" KNRM);
         retval = EXIT_FAILURE;
-        goto exit;
+        goto restore;
     }
+restore:
     /* Restore terminal. */
     enter(LIB_CALL, "tcsetattr", "%d, %s, %p ", fileno(stdin), "TCSAFLUSH", &old);
     if (tcsetattr(fileno(stdin), TCSAFLUSH, &old) != 0)
@@ -100,6 +102,28 @@ int getpass_file(char **lineptr, char *infile)
     }
     leave(LIB_CALL, "sysconf", "%ld", buff_size);
     /* Set the buff size to either the file size or PAGESIZE*/
+    enter(SYS_CALL, "stat", "%s, %p", infile, &file_stat);
+    if (stat(infile, &file_stat) < 0)
+    {
+        perror(KRED "Failed to get file status\n" KNRM);
+        leave(SYS_CALL, "stat", "%s", strerror(errno));
+        /*buff_size is PageSize*/
+    }
+    else
+    {
+        leave(SYS_CALL, "stat", "%d", EXIT_SUCCESS);
+        /*Decide between PageSize or FileSize*/
+        if (file_stat.st_size > buff_size)
+        {
+            //add a warning if file size is larger than page size
+            fprintf(stderr, KYLW "Warning: passfile \'%s\' is too large! Only reading the first %ld bytes\n" KNRM, infile, buff_size);
+        }
+        else
+        {
+            buff_size = file_stat.st_size;
+        }
+    }
+    //we have the buff_size
     enter(SYS_CALL, "open", "%s, %s", infile, "O_RDONLY");
     if ((fd = open(infile, O_RDONLY)) < 0)
     {
@@ -109,42 +133,13 @@ int getpass_file(char **lineptr, char *infile)
         goto exit;
     }
     leave(SYS_CALL, "open", "%d", fd);
-    enter(SYS_CALL, "fstat", "%d, %p", fd, &file_stat);
-    if (fstat(fd, &file_stat) < 0)
-    {
-        perror(KRED "Failed to get file status\n" KNRM);
-        leave(SYS_CALL, "fstat", "%s", strerror(errno));
-        /*buff_size is PageSize*/
-    }
-    else
-    {
-        leave(SYS_CALL, "fstat", "%d", EXIT_SUCCESS);
-        /*Decide between PageSize or FileSize*/
-        if (file_stat.st_size > buff_size)
-        {
-            //add a warning if file size is larger than page size
-            fprintf(stderr, KYLW "Warning: passfile \'%s\' is too large! Only reading the first %ld bytes " KNRM, infile, buff_size);
-        }
-        else
-        {
-            buff_size = file_stat.st_size;
-        }
-    }
-    //we have the buff_size
     if ((nread = mygetline(lineptr, buff_size, fd)) < 0)
     {
         perror(KRED "\nFailed to get line from terminal\n" KNRM);
         retval = EXIT_FAILURE;
         goto file_close;
     }
-    // (*lineptr)[strcspn(*lineptr, "\n")] = 0; //get rid of \n
     leave(LIB_CALL, "getline", "%zu", nread);
-    ///
-    // char *t;
-    // printf("%s\n", t);
-    //read lineptr until you see \n or EOF
-    //remove \n
-    //*lineptr should have password
 file_close:
     enter(SYS_CALL, "close", "%d", fd);
     if (close(fd) < 0)
@@ -160,7 +155,6 @@ exit:
     return retval;
 }
 
-//    if ((nread = getline(lineptr, &buff_size, stdin)) < 0)
 /*On Error, return -1*/
 ssize_t mygetline(char **lineptr, size_t n, int fd)
 {
@@ -198,6 +192,7 @@ ssize_t mygetline(char **lineptr, size_t n, int fd)
             break;
         }
     }
+    printf("\n");
     //realloc space
     if (!(new_n = (ptr - *lineptr)))
     {

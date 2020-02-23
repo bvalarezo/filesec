@@ -1,9 +1,8 @@
 #include <getopt.h>
-#include <string.h>
 #include "global.h"
 #include "debug.h"
 #include "version.h"
-#include "crypt.h"
+#include "filesec.h"
 
 static const char *options = "devhD:p:";
 static int e_flag, d_flag, p_flag, v_flag = 0;
@@ -68,13 +67,13 @@ int main(int argc, char *argv[])
     }
     if (e_flag)
     {
-        retval = crypter(infile, outfile, ENCRYPT, p_value);
+        retval = filesec(infile, outfile, ENCRYPT, p_value);
         //ENCRYPT
     }
     else if (d_flag)
     {
         //DECRYPT
-        retval = crypter(infile, outfile, DECRYPT, p_value);
+        retval = filesec(infile, outfile, DECRYPT, p_value);
     }
     goto exit;
 fail:
