@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
     char *outfile, *p_value = NULL;
     int retval = EXIT_SUCCESS;
     int opt;
-    // char *p_value;
     while ((opt = getopt(argc, argv, options)) != -1)
     {
         switch (opt)
@@ -62,7 +61,7 @@ int main(int argc, char *argv[])
     outfile = argv[++optind];
     if (argv[++optind])
     {
-        fprintf(stderr, KRED "Too many arguments!\nPlease specify only a singular infile and singular outfile\n" KNRM);
+        fprintf(stderr, KRED "Incorrect argument amount!\nPlease specify only a singular infile and singular outfile\n" KNRM);
         goto fail;
     }
     if (e_flag)

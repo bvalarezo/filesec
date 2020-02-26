@@ -1,8 +1,15 @@
 Wrap EVP functions with debug[DONE]
 replace fstat with stat [DONE]
-handle failure cases
-full read EOF case
-encryption
-decryption
-write to /tmp  (file.part)
+hash write on encryption[Done]
+hash read on decryption[Done]
+[IV rand+blocksize] [DONE]
+full read EOF case[DONE]
+encryption[Done]
+decryption[Done]
+write to /tmp  (file.part)[Done]
 -handle failure
+posix_fallocate + move tmp to outfile[Done]
+handle error cases(same in out file, etc) [Done]
+sendfile(2) vs rename(2) [Done]
+fix perror \n 
+create test cases
