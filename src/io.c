@@ -13,8 +13,8 @@ int full_read(int fd, void *buf, size_t count)
         enter(SYS_CALL, "read", "%d, %p, %ld", fd, buf, bytes_to_read);
         if ((bytes_read = read(fd, buf, bytes_to_read)) < 0)
         {
-            perror(KRED "Error when reading file\n" KNRM);
-            leave(SYS_CALL, "read", "%s", strerror(errno));
+            perror(KRED "Error when reading file" KNRM);
+            leave(SYS_CALL, "read", "%d", bytes_read);
             retval = -EXIT_FAILURE;
             goto exit;
         }
@@ -44,8 +44,8 @@ int full_write(int fd, const void *buf, size_t count)
         enter(SYS_CALL, "write", "%d, %p, %ld", fd, buf, bytes_to_write);
         if ((bytes_written = write(fd, buf, bytes_to_write)) < 0)
         {
-            perror(KRED "Error when writing file\n" KNRM);
-            leave(SYS_CALL, "write", "%s", strerror(errno));
+            perror(KRED "Error when writing file" KNRM);
+            leave(SYS_CALL, "write", "%d", bytes_written);
             retval = -EXIT_FAILURE;
             goto exit;
         }
@@ -68,8 +68,8 @@ int full_sendfile(int out_fd, int in_fd, off_t *offset, size_t count)
         enter(SYS_CALL, "sendfile", "%d, %d, %p, %ld", out_fd, in_fd, offset, bytes_to_send);
         if ((bytes_sent = sendfile(out_fd, in_fd, offset, bytes_to_send)) < 0)
         {
-            perror(KRED "Error when sending file\n" KNRM);
-            leave(SYS_CALL, "sendfile", "%s", strerror(errno));
+            perror(KRED "Error when sending file" KNRM);
+            leave(SYS_CALL, "sendfile", "%d", bytes_sent);
             retval = -EXIT_FAILURE;
             goto exit;
         }

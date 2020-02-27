@@ -12,4 +12,5 @@ posix_fallocate + move tmp to outfile[Done]
 handle error cases(same in out file, etc) [Done]
 sendfile(2) vs rename(2) [Done]
 fix perror \n 
-create test cases
+create test cases[1/3]
+handle stdin - and stdout -

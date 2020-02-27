@@ -19,7 +19,7 @@ int filesec(const char *src, char *dst, char mode, char *passfile)
     enter(SYS_CALL, "stat", "%s, %p", src, &infile_stat);
     if (stat(src, &infile_stat) < 0)
     {
-        perror(KRED "Failed to get file status\n" KNRM);
+        perror(KRED "Failed to get file status" KNRM);
         leave(SYS_CALL, "stat", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto exit;
@@ -53,20 +53,12 @@ stat_out_file: //I HATE THIS LABEL
     }
     leave(SYS_CALL, "stat", "%d", EXIT_SUCCESS);
     //Stat Calc
-    if (infile_stat.st_dev == outfile_stat.st_dev)
+    if (infile_stat.st_ino == outfile_stat.st_ino && infile_stat.st_dev == outfile_stat.st_dev)
     {
-        if (infile_stat.st_ino == outfile_stat.st_ino)
-        {
-            fprintf(stderr, KRED "Error: infile and outfile are the same!\n" KNRM);
-            retval = EXIT_FAILURE;
-            goto exit;
-        }
+        fprintf(stderr, KRED "Error: infile and outfile are the same!\n" KNRM);
+        retval = EXIT_FAILURE;
+        goto exit;
     }
-    else
-    {
-        diff_fs = TRUE;
-    }
-    //
     if (passfile == NULL)
     {
         if (getpass_stdin(&password) != EXIT_SUCCESS)
@@ -104,7 +96,7 @@ stat_out_file: //I HATE THIS LABEL
     enter(SYS_CALL, "open", "%s, %s", src, "O_RDONLY");
     if ((fd_infile = open(src, O_RDONLY)) < 0)
     {
-        perror(KRED "Failed to open file\n" KNRM);
+        perror(KRED "Failed to open file" KNRM);
         leave(SYS_CALL, "open", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto free_hash;
@@ -114,7 +106,7 @@ stat_out_file: //I HATE THIS LABEL
     enter(LIB_CALL, "mkstemp", "%s", tmp_filename);
     if ((fd_tmpfile = mkstemp(tmp_filename)) < 0)
     {
-        perror(KRED "Failed to make tmp file\n" KNRM);
+        perror(KRED "Failed to make tmp file" KNRM);
         leave(LIB_CALL, "mkstemp", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto close_fdin;
@@ -182,40 +174,18 @@ stat_out_file: //I HATE THIS LABEL
         goto close_fdtmp;
     }
     //check if differnet FS
-    if (diff_fs)
+    //get tmp stat
+    if (!diff_fs)
     {
-        //open outfile
-        enter(SYS_CALL, "open", "%s, %s", dst, "O_WRONLY | O_CREAT | O_TRUNC");
-        if ((fd_outfile = open(dst, O_WRONLY | O_CREAT | O_TRUNC, infile_stat.st_mode)) < 0)
+        enter(LIB_CALL, "realpath", "%s, %s", dst, cwd);
+        if ((cwd = realpath(dst, cwd)) == NULL)
         {
-            perror(KRED "Failed to open file\n" KNRM);
-            leave(SYS_CALL, "open", "%s", strerror(errno));
-            fprintf(stderr, KYLW "Outfile is located at %s\n" KYLW, tmp_filename);
-            goto close_fdtmp;
-        }
-        leave(SYS_CALL, "open", "%d", fd_outfile);
-        //sendfile
-        if (full_sendfile(fd_outfile, fd_tmpfile, 0, outfile_size) < 0)
-        {
-            fprintf(stderr, KRED "Failed to send file across file systems\n" KNRM);
-            fprintf(stderr, KYLW "Outfile is located at %s\n" KYLW, tmp_filename);
-            //close
-            goto close_fdout;
-        }
-    }
-    else
-    {
-        enter(LIB_CALL, "getcwd", "%s, %ld", cwd, sysconf(_SC_PAGESIZE));
-        if ((cwd = getcwd(cwd, sysconf(_SC_PAGESIZE))) == NULL)
-        {
-            perror(KRED "Failed to get the current working directory name" KNRM);
+            perror(KRED "Failed to get the absolute path to the destination" KNRM);
             leave(LIB_CALL, "getcwd", "%s", "NULL");
             fprintf(stderr, KYLW "Outfile is located at %s\n" KYLW, tmp_filename);
             goto close_fdtmp;
         }
-        leave(LIB_CALL, "getcwd", "%s", cwd);
-        cwd = strncat(cwd, "/", 1);
-        cwd = strncat(cwd, dst, strlen(dst));
+        leave(LIB_CALL, "realpath", "%s", cwd);
         //rename
         enter(LIB_CALL, "rename", "%s, %s", tmp_filename, cwd);
         if (rename(tmp_filename, cwd) < 0)
@@ -226,6 +196,33 @@ stat_out_file: //I HATE THIS LABEL
             goto free_cwd;
         }
         leave(LIB_CALL, "rename", "%d", EXIT_SUCCESS);
+    }
+    else
+    {
+        //open outfile
+        enter(SYS_CALL, "open", "%s, %s", dst, "O_WRONLY | O_CREAT | O_TRUNC");
+        if ((fd_outfile = open(dst, O_WRONLY | O_CREAT | O_TRUNC, infile_stat.st_mode)) < 0)
+        {
+            perror(KRED "Failed to open file" KNRM);
+            leave(SYS_CALL, "open", "%s", strerror(errno));
+            fprintf(stderr, KYLW "Outfile is located at %s\n" KYLW, tmp_filename);
+            goto close_fdtmp;
+        }
+        leave(SYS_CALL, "open", "%d", fd_outfile);
+        //sendfile
+        if (full_sendfile(fd_outfile, fd_tmpfile, 0, outfile_size) < 0)
+        {
+            fprintf(stderr, KRED "Failed to send file across file systems\n" KNRM);
+            fprintf(stderr, KYLW "Outfile is located at %s\n" KYLW, tmp_filename);
+        }
+        enter(SYS_CALL, "close", "%d", fd_outfile);
+        if (close(fd_outfile) < 0)
+        {
+            perror(KRED "Failed to close file" KNRM);
+            leave(SYS_CALL, "close", "%d", -EXIT_FAILURE);
+            retval = EXIT_FAILURE;
+        }
+        leave(SYS_CALL, "close", "%d", EXIT_SUCCESS);
     }
 free_cwd:
     if (cwd)
@@ -238,7 +235,7 @@ close_fdtmp:
     enter(SYS_CALL, "close", "%d", fd_tmpfile);
     if (close(fd_tmpfile) < 0)
     {
-        perror(KRED "Failed to close file\n" KNRM);
+        perror(KRED "Failed to close file" KNRM);
         leave(SYS_CALL, "close", "%d", -EXIT_FAILURE);
         retval = EXIT_FAILURE;
     }
@@ -247,7 +244,7 @@ close_fdin:
     enter(SYS_CALL, "close", "%d", fd_infile);
     if (close(fd_infile) < 0)
     {
-        perror(KRED "Failed to close file\n" KNRM);
+        perror(KRED "Failed to close file" KNRM);
         leave(SYS_CALL, "close", "%d", -EXIT_FAILURE);
         retval = EXIT_FAILURE;
     }
@@ -270,14 +267,4 @@ free_password:
         leave(LIB_CALL, "free", "%s", "void");
     }
     goto exit;
-close_fdout:
-    enter(SYS_CALL, "close", "%d", fd_outfile);
-    if (close(fd_outfile) < 0)
-    {
-        perror(KRED "Failed to close file\n" KNRM);
-        leave(SYS_CALL, "close", "%d", -EXIT_FAILURE);
-        retval = EXIT_FAILURE;
-    }
-    leave(SYS_CALL, "close", "%d", EXIT_SUCCESS);
-    goto close_fdtmp;
 }

@@ -16,7 +16,7 @@ int getpass_stdin(char **lineptr)
     enter(LIB_CALL, "sysconf", "%s", "_SC_PAGESIZE");
     if ((buff_size = sysconf(_SC_PAGESIZE)) < 0)
     {
-        perror(KRED "Failed to get system's page size\n" KNRM);
+        perror(KRED "Failed to get system's page size" KNRM);
         leave(LIB_CALL, "sysconf", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto exit;
@@ -26,7 +26,7 @@ int getpass_stdin(char **lineptr)
     enter(LIB_CALL, "tcgetattr", "%d, %p", fileno(stdin), &old);
     if (tcgetattr(fileno(stdin), &old) != 0)
     {
-        perror(KRED "Failed to backup terminal settings\n" KNRM);
+        perror(KRED "Failed to backup terminal settings" KNRM);
         leave(LIB_CALL, "tcgetattr", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto exit;
@@ -38,7 +38,7 @@ int getpass_stdin(char **lineptr)
     enter(LIB_CALL, "tcsetattr", "%d, %s, %p", fileno(stdin), "TCSAFLUSH", &new);
     if (tcsetattr(fileno(stdin), TCSAFLUSH, &new) != 0)
     {
-        perror(KRED "Failed to set terminal settings\n" KNRM);
+        perror(KRED "Failed to set terminal settings" KNRM);
         leave(LIB_CALL, "tcsetattr", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto exit;
@@ -48,7 +48,7 @@ int getpass_stdin(char **lineptr)
     //FPRINTF DOESNT WORK BECAUSE 02, use full write
     if (full_write(fileno(stdout), "Enter Password:", 15) < 0)
     {
-        perror(KRED "Failed to write message\n" KNRM);
+        perror(KRED "Failed to write message" KNRM);
         retval = EXIT_FAILURE;
         goto restore;
     }
@@ -63,7 +63,7 @@ restore:
     enter(LIB_CALL, "tcsetattr", "%d, %s, %p ", fileno(stdin), "TCSAFLUSH", &old);
     if (tcsetattr(fileno(stdin), TCSAFLUSH, &old) != 0)
     {
-        perror(KRED "Failed to restore terminal settings\n" KNRM);
+        perror(KRED "Failed to restore terminal settings" KNRM);
         leave(LIB_CALL, "tcsetattr", "%s", strerror(errno));
         retval = EXIT_FAILURE;
         goto free_exit;
@@ -95,8 +95,8 @@ int getpass_file(char **lineptr, char *infile)
     enter(LIB_CALL, "sysconf", "%s", "_SC_PAGESIZE");
     if ((buff_size = sysconf(_SC_PAGESIZE)) < 0)
     {
-        perror(KRED "Failed to get system's page size\n" KNRM);
-        leave(LIB_CALL, "sysconf", "%s", strerror(errno));
+        perror(KRED "Failed to get system's page size" KNRM);
+        leave(LIB_CALL, "sysconf", "%ld", buff_size);
         retval = EXIT_FAILURE;
         goto exit;
     }
@@ -105,8 +105,8 @@ int getpass_file(char **lineptr, char *infile)
     enter(SYS_CALL, "stat", "%s, %p", infile, &file_stat);
     if (stat(infile, &file_stat) < 0)
     {
-        perror(KRED "Failed to get file status\n" KNRM);
-        leave(SYS_CALL, "stat", "%s", strerror(errno));
+        perror(KRED "Failed to get file status" KNRM);
+        leave(SYS_CALL, "stat", "%d", -EXIT_FAILURE);
         /*buff_size is PageSize*/
     }
     else
@@ -127,25 +127,24 @@ int getpass_file(char **lineptr, char *infile)
     enter(SYS_CALL, "open", "%s, %s", infile, "O_RDONLY");
     if ((fd = open(infile, O_RDONLY)) < 0)
     {
-        perror(KRED "Failed to open file\n" KNRM);
-        leave(SYS_CALL, "open", "%s", strerror(errno));
+        perror(KRED "Failed to open file" KNRM);
+        leave(SYS_CALL, "open", "%d", fd);
         retval = EXIT_FAILURE;
         goto exit;
     }
     leave(SYS_CALL, "open", "%d", fd);
     if ((nread = mygetline(lineptr, buff_size, fd)) < 0)
     {
-        perror(KRED "\nFailed to get line from terminal\n" KNRM);
+        fprintf(stderr, KRED "\nFailed to get line from terminal\n" KNRM);
         retval = EXIT_FAILURE;
         goto file_close;
     }
-    leave(LIB_CALL, "getline", "%zu", nread);
 file_close:
     enter(SYS_CALL, "close", "%d", fd);
     if (close(fd) < 0)
     {
-        perror(KRED "Failed to close file\n" KNRM);
-        leave(SYS_CALL, "close", "%s", strerror(errno));
+        perror(KRED "Failed to close file" KNRM);
+        leave(SYS_CALL, "close", "%d", -EXIT_FAILURE);
         retval = EXIT_FAILURE;
         goto exit;
     }
@@ -167,8 +166,8 @@ ssize_t mygetline(char **lineptr, size_t n, int fd)
     enter(LIB_CALL, "malloc", "%ld", n);
     if ((*lineptr = malloc(n)) == NULL)
     {
-        perror(KRED "Failed to malloc bytes\n" KNRM);
-        leave(LIB_CALL, "malloc", "%s", strerror(errno));
+        perror(KRED "Failed to malloc bytes" KNRM);
+        leave(LIB_CALL, "malloc", "%p", *lineptr);
         retval = -EXIT_FAILURE;
         goto exit;
     }
@@ -178,8 +177,8 @@ ssize_t mygetline(char **lineptr, size_t n, int fd)
         enter(SYS_CALL, "read", "%d, %p, %ld", fd, *lineptr, n);
         if ((retval = read(fd, *lineptr, n)) < 0)
         {
-            perror(KRED "Error when reading file\n" KNRM);
-            leave(SYS_CALL, "read", "%s", strerror(errno));
+            perror(KRED "Error when reading file" KNRM);
+            leave(SYS_CALL, "read", "%ld", retval);
             retval = -EXIT_FAILURE;
             goto free_exit;
         }
@@ -204,8 +203,8 @@ ssize_t mygetline(char **lineptr, size_t n, int fd)
     enter(LIB_CALL, "realloc", "%p, %ld", *lineptr, new_n * sizeof(char));
     if (!(*lineptr = realloc(*lineptr, new_n * sizeof(char))))
     {
-        perror(KRED "Failed to realloc bytes\n" KNRM);
-        leave(LIB_CALL, "realloc", "%s", strerror(errno));
+        perror(KRED "Failed to realloc bytes" KNRM);
+        leave(LIB_CALL, "realloc", "%p", *lineptr);
         retval = -EXIT_FAILURE;
         goto free_exit;
     }
