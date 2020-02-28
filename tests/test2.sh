@@ -21,10 +21,3 @@ else
     echo "Return Code $?; Failure!"
 fi
 
-echo $prog -e -e -e 
-$prog -e -e -e
-if [ $? = 1 ] ; then
-    echo "Return Code 1; Program should error on this invalid usage"
-else
-    echo "Return Code $?; Failure!"
-fi
