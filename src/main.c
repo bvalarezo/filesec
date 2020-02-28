@@ -11,8 +11,7 @@ int DBGVAL;
 
 int main(int argc, char *argv[])
 {
-    const char *infile;
-    char *outfile, *p_value = NULL;
+    char *infile, *outfile, *p_value = NULL;
     int retval = EXIT_SUCCESS;
     int opt;
     while ((opt = getopt(argc, argv, options)) != -1)
@@ -32,7 +31,7 @@ int main(int argc, char *argv[])
             goto fail;
             break;
         case DBUG:
-            DBGVAL = atoi(optarg);
+            sscanf(optarg, "%i", &DBGVAL);
             break;
         case PASSFILE:
             p_flag++;

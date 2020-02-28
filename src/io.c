@@ -80,3 +80,58 @@ exit:
     leave(USER_CALL, __func__, "%d", retval);
     return retval;
 }
+
+int full_read_write(int out_fd, int in_fd, size_t count)
+{
+    enter(USER_CALL, __func__, "%d, %d, %ld", out_fd, in_fd, count);
+    int retval = EXIT_SUCCESS;
+    size_t bytes_to_send = count, page_size;
+    int bytes_sent = 0;
+    unsigned char *bucket;
+    enter(LIB_CALL, "sysconf", "%s", "_SC_PAGESIZE");
+    if ((page_size = sysconf(_SC_PAGESIZE)) < 0)
+    {
+        perror(KRED "Failed to get system's page size\n" KNRM);
+        leave(LIB_CALL, "sysconf", "%s", strerror(errno));
+        retval = EXIT_FAILURE;
+        goto exit;
+    }
+    leave(LIB_CALL, "sysconf", "%ld", page_size);
+    //malloc
+    enter(LIB_CALL, "malloc", "%ld", page_size);
+    if ((bucket = malloc(page_size)) == NULL)
+    {
+        perror(KRED "Failed to malloc bytes" KNRM);
+        leave(LIB_CALL, "malloc", "%s", "NULL");
+        retval = -EXIT_FAILURE;
+        goto exit;
+    }
+    leave(LIB_CALL, "malloc", "%p", bucket);
+    while (bytes_to_send > 0)
+    {
+        if (bytes_to_send < page_size)
+            page_size = bytes_to_send;
+        //full read infile to inbuffer
+        if ((bytes_sent = full_read(in_fd, bucket, page_size)) < 0)
+        {
+            perror(KRED "Failed to read\n" KNRM);
+            retval = -EXIT_FAILURE;
+            goto free;
+        }
+        //full write outfile from outbucket
+        if (full_write(out_fd, bucket, bytes_sent) < 0)
+        {
+            retval = -EXIT_FAILURE;
+            goto free;
+        }
+        enter(LIB_CALL, "memset", "%p, %d, %d", bucket, 0, bytes_sent);
+        memset(bucket, 0, bytes_sent);
+        leave(LIB_CALL, "memset", "%p", bucket);
+        bytes_to_send -= bytes_sent;
+    }
+free:
+    free(bucket);
+exit:
+    leave(USER_CALL, __func__, "%d", retval);
+    return retval;
+}

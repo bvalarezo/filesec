@@ -3,6 +3,7 @@
 
 #include <limits.h>
 #include <unistd.h>
+#include <sys/statvfs.h>
 
 #define TMP_FILENAME "filesec_XXXXXX"
 
