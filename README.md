@@ -1,3 +1,4 @@
+# WARNING: THIS PROJECT WAS POORLY IMPLEMENTATED AND NOT SECURE. PLEASE DON'T USE IT
 # Filesec
 
 Filesec is a program that will encrypt/decrypt files using the OPENSSL library.
